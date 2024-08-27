@@ -65,3 +65,13 @@ footer p {
 progress {
   width: 140px;
 }
+
+.hidden {
+  visibility: hidden;
+}
+
+#error-box {
+  background-color: rgb(204, 99, 36);
+  color: white;
+  padding: 4px 8px;
+}

@@ -1,35 +1,34 @@
-// button click handler
-const fetchNote = async () => {
-  // reset UI
-  $('#note-box').css('visibility', 'hidden')
-  $('#broadcasting-status').html('')
-  $('#broadcasting-progress').css('visibility', 'hidden')
-  $('#broadcasting-progress').val(0)
-  $('#note-found').text('')
-  // messages to show to user
-  const checkMark = '&#10003;'
-  const txt = {
-    broadcasting: 'Broadcasting to relays... ',
-    notFound: 'Note not found',
-  }
-  // parse pubkey ('npub' or hexa)
-  const id = nip19ToHex($('#id').val()).id
-  if (!id) return
-  // disable button (will be re-enable at the end of the process)
-  $('#fetch-note').prop('disabled', true)
-  // get event from relays
-  const filter = { ids: [id] }
-  const data = await getEvent(filter)
-  // re-enable find note button
-  $('#fetch-note').prop('disabled', false)
-  $('#note-found').text('Found')
+const checkMark = '&#10003;'
+const txt = {
+  broadcasting: 'Broadcasting to relays... ',
+  notFound: 'Note not found',
+}
+
+const handleFetch = async () => {
+  resetUI()
+  // validate id is present
+  const id = $('#id').val()
+  if (!id) throwError('Missing nostr id')
+  // validate is a valid nip19
+  const hex = nip19ToHex(id)
+  console.log('hex', hex)
+  if (!hex) throwError('Invalid Nostr note (should be NIP19)')
+  // fetch event from relays
+  const data = await fetchNote(hex.id)
+  if (!data) throwError('Event not found')
+  // validate pubkey
+  const ok = await validatePubkey(data)
+  if (!ok) throwError('Invalid pubkey')
+  // add event handler
+  $('#delete-note').on('click', () => deleteNote(data))
   $('#note-box').css('visibility', 'visible')
+}
 
+const deleteNote = (data) => {
   const kind5 = { ...data, kind: 5 }
-  console.log('kind5', kind5)
-
-  const deleteNote = () => {
-    window.nostr.signEvent(kind5).then((signed) => {
+  window.nostr
+    .signEvent(kind5)
+    .then((signed) => {
       console.log('signed', signed)
       // inform user that app is broadcasting from relays
       $('#broadcasting-status').html(txt.broadcasting)
@@ -47,9 +46,32 @@ const fetchNote = async () => {
         $('#broadcasting-progress').val(20)
       })
     })
-  }
+    .catch((err) => console.log(err))
+}
 
-  $('#delete-note').on('click', deleteNote)
+const resetUI = () => {
+  $('#broadcasting-status').html('')
+  $('#broadcasting-progress').css('visibility', 'hidden')
+  $('#broadcasting-progress').val(0)
+  $('#error-box').css('visibility', 'hidden')
+  $('#note-box').css('visibility', 'hidden')
+}
+
+const fetchNote = async (id) => {
+  $('#fetch-note').prop('disabled', true)
+  const filter = { ids: [id] }
+  console.log('filter', filter)
+  const data = await getEvent(filter)
+  console.log('data2', data)
+  $('#fetch-note').prop('disabled', true)
+  return data
+}
+
+const validatePubkey = async (data) => {
+  const pubkey = await window.nostr.getPublicKey()
+  console.log('pubkey', pubkey)
+  console.log('data', data)
+  return data.pubkey === pubkey
 }
 
 const nip19ToHex = (id) => {
@@ -84,4 +106,11 @@ const parseTLV = (data) => {
     result[t].push(v)
   }
   return result
+}
+
+const throwError = (err) => {
+  $('#error-box').css('visibility', 'visible')
+  $('#error-box').text(err)
+  console.log('error', err)
+  throw err
 }

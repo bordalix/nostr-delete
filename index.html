@@ -47,6 +47,10 @@
         <summary>Know more</summary>
         <p>This app will send kind 5 (aka "delete") events asking relays to delete your notes.</p>
         <p>
+          It requires a browser extension which implements <strong>window.nostr</strong> (like
+          <a href="getalby.com">Alby</a>)
+        </p>
+        <p>
           If you want to use your own
           <a href="https://github.com/bordalix/nostr-delete/blob/master/js/relays.js">list of relays</a>:
         </p>
@@ -81,17 +85,16 @@
               <input type="text" id="id" name="id" placeholder="nevent1 or note1" style="width: 180px" required />
             </p>
             <p>
-              <button id="fetch-note" onclick="fetchNote(); return false;">Fetch note</button>
+              <button id="fetch-note" onclick="handleFetch(); return false;">Fetch note</button>
             </p>
           </div>
         </form>
       </div>
-      <div class="box" id="note-box" style="visibility: hidden">
+      <p class="box hidden" id="error-box"></p>
+      <div class="box hidden" id="note-box">
         <div class="space-between">
-          <p id="note-found"></p>
-          <p>
-            <button id="delete-note">Delete note</button>
-          </p>
+          <p>Found</p>
+          <p><button id="delete-note">Delete note</button></p>
         </div>
       </div>
       <div class="space-between">
