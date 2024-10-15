@@ -34,8 +34,6 @@ const deleteNote = async (note) => {
       ['k', note.kind],
     ],
   }
-  event.id = await calculateEventID(event)
-  console.log('event', event)
   const signed = await window.nostr.signEvent(event)
   console.log('signed', signed)
   // inform user that app is broadcasting from relays
